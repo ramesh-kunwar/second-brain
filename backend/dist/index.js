@@ -19,6 +19,8 @@ const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const user_model_1 = require("./models/user.model");
 const connectDb_1 = require("./config/connectDb");
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+const middleware_1 = require("./middleware");
+const content_model_1 = require("./models/content.model");
 const app = (0, express_1.default)();
 app.use(express_1.default.json());
 (0, connectDb_1.connectDb)();
@@ -75,8 +77,6 @@ app.post("/api/v1/signin", (req, res) => __awaiter(void 0, void 0, void 0, funct
                 msg: "All fields are required",
             });
         }
-        const hashedPassword = bcryptjs_1.default.hashSync(password, 10);
-        console.log(hashedPassword);
         const user = yield user_model_1.UserModel.findOne({ email });
         if (!user || !bcryptjs_1.default.compareSync(password, user.password)) {
             res.status(200).json({
@@ -102,7 +102,22 @@ app.post("/api/v1/signin", (req, res) => __awaiter(void 0, void 0, void 0, funct
         });
     }
 }));
-app.post("/api/v1/content", (req, res) => { });
+app.post("/api/v1/content", middleware_1.userMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { link, type, title } = req.body;
+    const content = yield content_model_1.ContentModel.create({
+        link,
+        type,
+        title,
+        // @ts-ignore
+        userId: req.userId,
+        tags: [],
+    });
+    res.status(201).json({
+        success: true,
+        msg: "Content Added Successfully",
+        data: content,
+    });
+}));
 app.delete("/api/v1/content", (req, res) => { });
 app.get("/api/v1/brain/:shareLink", (req, res) => { });
 app.listen(4000, () => {

@@ -7,6 +7,8 @@ import bcrypt from "bcryptjs";
 import { UserModel } from "./models/user.model";
 import { connectDb } from "./config/connectDb";
 import jwt from "jsonwebtoken";
+import { userMiddleware } from "./middleware";
+import { ContentModel } from "./models/content.model";
 const app = express();
 app.use(express.json());
 connectDb();
@@ -98,7 +100,24 @@ app.post("/api/v1/signin", async (req: Request, res: Response) => {
   }
 });
 
-app.post("/api/v1/content", (req, res) => {});
+app.post("/api/v1/content", userMiddleware, async (req, res) => {
+  const { link, type, title } = req.body;
+
+  const content = await ContentModel.create({
+    link,
+    type,
+    title,
+    // @ts-ignore
+    userId: req.userId,
+    tags: [],
+  });
+
+  res.status(201).json({
+    success: true,
+    msg: "Content Added Successfully",
+    data: content,
+  });
+});
 
 app.delete("/api/v1/content", (req, res) => {});
 

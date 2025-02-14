@@ -1,1 +1,1 @@
-{"root":["./src/index.ts","./src/config/connectdb.ts","./src/models/user.model.ts"],"version":"5.7.3"}
+{"root":["./src/index.ts","./src/middleware.ts","./src/config/connectdb.ts","./src/models/content.model.ts","./src/models/tags.model.ts","./src/models/user.model.ts"],"version":"5.7.3"}
