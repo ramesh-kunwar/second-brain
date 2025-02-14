@@ -125,7 +125,7 @@ app.get("/api/v1/content", userMiddleware, async (req, res) => {
   // console.log(req);
   const content = await ContentModel.find({
     userId: userId,
-  }).populate("userId");
+  }).populate("userId", "username _id");
 
   res.status(200).json({
     success: true,
