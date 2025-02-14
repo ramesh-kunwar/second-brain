@@ -6,7 +6,7 @@ import express, { Request, Response, NextFunction } from "express";
 import bcrypt from "bcryptjs";
 import { UserModel } from "./models/user.model";
 import { connectDb } from "./config/connectDb";
-
+import jwt from "jsonwebtoken";
 const app = express();
 app.use(express.json());
 connectDb();
@@ -21,7 +21,21 @@ app.post("/api/v1/signup", async (req: Request, res: Response) => {
   const { username, email, password } = req.body;
   try {
     if (!email || !password) {
-      throw new Error("All fields are required");
+      res.status(400).json({
+        success: false,
+        msg: "All fields are required.",
+      });
+      return;
+    }
+
+    const existingUsr = await UserModel.findOne({ email });
+
+    if (existingUsr) {
+      res.status(409).json({
+        success: false,
+        msg: "User already exists",
+      });
+      return;
     }
 
     const hashedPassword = bcrypt.hashSync(password, 10);
@@ -42,7 +56,44 @@ app.post("/api/v1/signup", async (req: Request, res: Response) => {
     console.log(error);
     res.status(500).json({
       success: false,
-      error: "Sing Up failed",
+      error: "Sing Up failed ",
+    });
+    return;
+  }
+});
+
+app.post("/api/v1/signin", async (req: Request, res: Response) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      res.status(400).json({
+        success: false,
+        msg: "All fields are required",
+      });
+    }
+
+    const user = await UserModel.findOne({ email });
+    if (!user || !bcrypt.compareSync(password, user.password)) {
+      res.status(200).json({
+        success: false,
+        msg: "Invalid credentials",
+      });
+      return;
+    }
+    const token = jwt.sign({ email }, process.env.JWT_SECRET!, {
+      expiresIn: "3d",
+    });
+    res.status(500).json({
+      success: false,
+      msg: "User signed in successfully",
+      data: user,
+      token,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: `User logged in failed. ${error}`,
     });
   }
 });

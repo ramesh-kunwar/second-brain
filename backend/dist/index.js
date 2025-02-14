@@ -18,10 +18,10 @@ const express_1 = __importDefault(require("express"));
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const user_model_1 = require("./models/user.model");
 const connectDb_1 = require("./config/connectDb");
+const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const app = (0, express_1.default)();
 app.use(express_1.default.json());
 (0, connectDb_1.connectDb)();
-console.log(process.env.DATABASE_URL);
 app.get("/ping", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     res.json({
         msg: "Ping...",
@@ -31,7 +31,19 @@ app.post("/api/v1/signup", (req, res) => __awaiter(void 0, void 0, void 0, funct
     const { username, email, password } = req.body;
     try {
         if (!email || !password) {
-            throw new Error("All fields are required");
+            res.status(400).json({
+                success: false,
+                msg: "All fields are required.",
+            });
+            return;
+        }
+        const existingUsr = yield user_model_1.UserModel.findOne({ email });
+        if (existingUsr) {
+            res.status(409).json({
+                success: false,
+                msg: "User already exists",
+            });
+            return;
         }
         const hashedPassword = bcryptjs_1.default.hashSync(password, 10);
         const user = yield user_model_1.UserModel.create({
@@ -49,7 +61,44 @@ app.post("/api/v1/signup", (req, res) => __awaiter(void 0, void 0, void 0, funct
         console.log(error);
         res.status(500).json({
             success: false,
-            error: "Sing Up failed",
+            error: "Sing Up failed ",
+        });
+        return;
+    }
+}));
+app.post("/api/v1/signin", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { email, password } = req.body;
+        if (!email || !password) {
+            res.status(400).json({
+                success: false,
+                msg: "All fields are required",
+            });
+        }
+        const hashedPassword = bcryptjs_1.default.hashSync(password, 10);
+        console.log(hashedPassword);
+        const user = yield user_model_1.UserModel.findOne({ email });
+        if (!user || !bcryptjs_1.default.compareSync(password, user.password)) {
+            res.status(200).json({
+                success: false,
+                msg: "Invalid credentials",
+            });
+            return;
+        }
+        const token = jsonwebtoken_1.default.sign({ email }, process.env.JWT_SECRET, {
+            expiresIn: "3d",
+        });
+        res.status(500).json({
+            success: false,
+            msg: "User signed in successfully",
+            data: user,
+            token,
+        });
+    }
+    catch (error) {
+        res.status(500).json({
+            success: false,
+            error: `User logged in failed. ${error}`,
         });
     }
 }));
