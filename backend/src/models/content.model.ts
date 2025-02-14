@@ -13,12 +13,12 @@ const contentSchema = new Schema({
   },
 
   tags: {
-    type: [Schema.Types.ObjectId],
+    type: [mongoose.Schema.Types.ObjectId],
     ref: "Tag",
   },
 
   userId: {
-    type: Schema.Types.ObjectId,
+    type: mongoose.Schema.Types.ObjectId,
     ref: "User",
   },
 });

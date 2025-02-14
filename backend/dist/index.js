@@ -85,7 +85,7 @@ app.post("/api/v1/signin", (req, res) => __awaiter(void 0, void 0, void 0, funct
             });
             return;
         }
-        const token = jsonwebtoken_1.default.sign({ email }, process.env.JWT_SECRET, {
+        const token = jsonwebtoken_1.default.sign({ id: user._id }, process.env.JWT_SECRET, {
             expiresIn: "3d",
         });
         res.status(500).json({
@@ -118,7 +118,20 @@ app.post("/api/v1/content", middleware_1.userMiddleware, (req, res) => __awaiter
         data: content,
     });
 }));
-app.delete("/api/v1/content", (req, res) => { });
+app.get("/api/v1/content", middleware_1.userMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    // @ts-ignore
+    const userId = req.userId;
+    // console.log(req);
+    const content = yield content_model_1.ContentModel.find({
+        userId: userId,
+    }).populate("userId");
+    res.status(200).json({
+        success: true,
+        message: "Content fetched successfully",
+        data: content,
+        userId,
+    });
+}));
 app.get("/api/v1/brain/:shareLink", (req, res) => { });
 app.listen(4000, () => {
     console.log(`App is running at port 4000`);

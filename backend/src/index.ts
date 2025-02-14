@@ -83,7 +83,7 @@ app.post("/api/v1/signin", async (req: Request, res: Response) => {
       });
       return;
     }
-    const token = jwt.sign({ email }, process.env.JWT_SECRET!, {
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET!, {
       expiresIn: "3d",
     });
     res.status(500).json({
@@ -119,7 +119,21 @@ app.post("/api/v1/content", userMiddleware, async (req, res) => {
   });
 });
 
-app.delete("/api/v1/content", (req, res) => {});
+app.get("/api/v1/content", userMiddleware, async (req, res) => {
+  // @ts-ignore
+  const userId = req.userId;
+  // console.log(req);
+  const content = await ContentModel.find({
+    userId: userId,
+  }).populate("userId");
+
+  res.status(200).json({
+    success: true,
+    message: "Content fetched successfully",
+    data: content,
+    userId,
+  });
+});
 
 app.get("/api/v1/brain/:shareLink", (req, res) => {});
 

@@ -8,10 +8,9 @@ export const userMiddleware = (
 ) => {
   const header = req.headers["authorization"];
   const decoded = jwt.verify(header as string, process.env.JWT_SECRET!);
-
   if (decoded) {
     // @ts-ignore
-    req.userId = decode.userId;
+    req.userId = decoded.id;
     next();
   } else {
     res.status(403).json({
